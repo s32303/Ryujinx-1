@@ -81,14 +81,70 @@ namespace Ryujinx.Graphics.OpenGL.Effects.Smaa
                 var blendShaderData = EmbeddedResources.ReadAllText("Ryujinx.Graphics.OpenGL/Shaders/smaa_blend.glsl");
                 var neighbourShaderData = EmbeddedResources.ReadAllText("Ryujinx.Graphics.OpenGL/Shaders/smaa_neighbour.glsl");
 
+                var edgeProgram = GL.CreateProgram();
+                var shader = GL.CreateShader(ShaderType.ComputeShader);
                 var shaders = new string[] { presets, edgeShaderData };
-                var edgeProgram = ShaderHelper.CompileProgram(shaders, ShaderType.ComputeShader);
+                GL.ShaderSource(shader, 2, shaders, (int[])null);
+                GL.CompileShader(shader);
+                GL.GetShader(shader, ShaderParameter.CompileStatus, out var status);
+                if (status == 0)
+                {
+                    var log = GL.GetShaderInfoLog(shader);
+                    return;
+                }
+                GL.AttachShader(edgeProgram, shader);
+                GL.LinkProgram(edgeProgram);
+                GL.GetProgram(edgeProgram, GetProgramParameterName.LinkStatus, out status);
+                if (status == 0)
+                {
+                    var log = GL.GetProgramInfoLog(edgeProgram);
+                    return;
+                }
+                GL.DeleteShader(shader);
 
+                var blendProgram = GL.CreateProgram();
+                shader = GL.CreateShader(ShaderType.ComputeShader);
                 shaders[1] = blendShaderData;
-                var blendProgram = ShaderHelper.CompileProgram(shaders, ShaderType.ComputeShader);
+                GL.ShaderSource(shader, 2, shaders, (int*)IntPtr.Zero);
+                GL.CompileShader(shader);
+                GL.GetShader(shader, ShaderParameter.CompileStatus, out status);
+                if (status == 0)
+                {
+                    var log = GL.GetShaderInfoLog(shader);
+                    return;
+                }
+                GL.AttachShader(blendProgram, shader);
+                GL.LinkProgram(blendProgram);
 
+                GL.GetProgram(blendProgram, GetProgramParameterName.LinkStatus, out status);
+                if (status == 0)
+                {
+                    var log = GL.GetProgramInfoLog(blendProgram);
+                    return;
+                }
+                GL.DeleteShader(shader);
+
+                var neighbourProgram = GL.CreateProgram();
+                shader = GL.CreateShader(ShaderType.ComputeShader);
                 shaders[1] = neighbourShaderData;
-                var neighbourProgram = ShaderHelper.CompileProgram(shaders, ShaderType.ComputeShader);
+                GL.ShaderSource(shader, 2, shaders, (int*)IntPtr.Zero);
+                GL.CompileShader(shader);
+                GL.GetShader(shader, ShaderParameter.CompileStatus, out status);
+                if (status == 0)
+                {
+                    var log = GL.GetShaderInfoLog(shader);
+                    return;
+                }
+                GL.AttachShader(neighbourProgram, shader);
+                GL.LinkProgram(neighbourProgram);
+
+                GL.GetProgram(neighbourProgram, GetProgramParameterName.LinkStatus, out status);
+                if (status == 0)
+                {
+                    var log = GL.GetProgramInfoLog(neighbourProgram);
+                    return;
+                }
+                GL.DeleteShader(shader);
 
                 _edgeShaderPrograms[i] = edgeProgram;
                 _blendShaderPrograms[i] = blendProgram;

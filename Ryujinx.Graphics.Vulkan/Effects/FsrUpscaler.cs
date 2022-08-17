@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
+using System.IO;
 
 namespace Ryujinx.Graphics.Vulkan.Effects
 {
@@ -53,9 +54,6 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _scalingPipeline.Initialize();
             _sharpeningPipeline.Initialize();
 
-            var scalingShader = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Shaders/fsr_scaling.spirv");
-            var sharpeningShader = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Shaders/fsr_sharpening.spirv");
-
             var computeBindings = new ShaderBindings(
                 new[] { 2 },
                 Array.Empty<int>(),
@@ -72,12 +70,12 @@ namespace Ryujinx.Graphics.Vulkan.Effects
 
             _scalingProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(scalingShader, computeBindings, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(this.ScalingShader, computeBindings, ShaderStage.Compute, TargetLanguage.Spirv)
             });
 
             _sharpeningProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(sharpeningShader, sharpeningBindings, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(this.SharpeningShader, sharpeningBindings, ShaderStage.Compute, TargetLanguage.Spirv)
             });
         }
 
