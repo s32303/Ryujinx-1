@@ -10,7 +10,7 @@ layout (constant_id = 5) const float METRIC_HEIGHT = 1080.0;
 
 #define SMAA_RT_METRICS float4(1.0 / METRIC_WIDTH, 1.0 / METRIC_HEIGHT, METRIC_WIDTH, METRIC_HEIGHT)
 
-layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in;
 /**
  * Copyright (C) 2013 Jorge Jimenez (jorge@iryoku.com)
  * Copyright (C) 2013 Jose I. Echevarria (joseignacioechevarria@gmail.com)
@@ -1382,22 +1382,15 @@ layout( binding = 2 ) uniform invResolution
     vec2 invResolution_data;
 };
 
-void main() {  
-  vec2 loc = ivec2(gl_GlobalInvocationID.x * 4, gl_GlobalInvocationID.y * 4);
-  for(int i = 0; i < 4; i++)
-  {
-      for(int j = 0; j < 4; j++)
-      {
-          ivec2 texelCoord = ivec2(loc.x + i, loc.y + j);
-          vec2 coord = vec2(texelCoord.x / invResolution_data.x, texelCoord.y / invResolution_data.y);
-          vec2 pixCoord;
-          vec4 offset;
+void main() {
+    vec2 coord = vec2((gl_GlobalInvocationID.x) / invResolution_data.x, (gl_GlobalInvocationID.y) / invResolution_data.y);
+	vec2 pixCoord;
+	vec4 offset;
+	
+	SMAANeighborhoodBlendingVS(coord, offset);
 
-          SMAANeighborhoodBlendingVS(coord, offset);
+	vec4 oColor  = SMAANeighborhoodBlendingPS(coord, offset, inputImg, samplerBlend);
 
-          vec4 oColor  = SMAANeighborhoodBlendingPS(coord, offset, inputImg, samplerBlend);
+	imageStore(imgOutput,  ivec2(gl_GlobalInvocationID.xy), oColor);
 
-          imageStore(imgOutput,  texelCoord, oColor);
-      }
-  }
 }
