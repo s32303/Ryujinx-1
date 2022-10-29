@@ -1,8 +1,10 @@
+﻿using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
+using System.IO;
 
 namespace Ryujinx.Graphics.Vulkan.Effects
 {
@@ -34,6 +36,8 @@ namespace Ryujinx.Graphics.Vulkan.Effects
         {
             _pipeline.Initialize();
 
+            var shader = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Shaders/fxaa.spirv");
+
             var computeBindings = new ShaderBindings(
                 new[] { 2 },
                 Array.Empty<int>(),
@@ -44,7 +48,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
 
             _shaderProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(this.Shader, computeBindings, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(shader, computeBindings, ShaderStage.Compute, TargetLanguage.Spirv)
             });
         }
 

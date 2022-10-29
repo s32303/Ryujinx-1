@@ -1,4 +1,4 @@
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using Ryujinx.Common;
 using Ryujinx.Graphics.OpenGL.Image;
@@ -32,29 +32,7 @@ namespace Ryujinx.Graphics.OpenGL.Effects
 
         public void Initialize()
         {
-            var shaderData = EmbeddedResources.ReadAllText("Ryujinx.Graphics.OpenGL/Shaders/fxaa.glsl");
-            var shader = GL.CreateShader(ShaderType.ComputeShader);
-            GL.ShaderSource(shader, shaderData);
-            GL.CompileShader(shader);
-            GL.GetShader(shader, ShaderParameter.CompileStatus, out var status);
-            if (status == 0)
-            {
-                var log = GL.GetShaderInfoLog(shader);
-                return;
-            }
-
-            _shaderProgram = GL.CreateProgram();
-            GL.AttachShader(_shaderProgram, shader);
-            GL.LinkProgram(_shaderProgram);
-
-            GL.GetProgram(_shaderProgram, GetProgramParameterName.LinkStatus, out status);
-            if (status == 0)
-            {
-                var log = GL.GetProgramInfoLog(_shaderProgram);
-                return;
-            }
-            GL.DetachShader(_shaderProgram, shader);
-            GL.DeleteShader(shader);
+            _shaderProgram = ShaderHelper.CompileProgram(EmbeddedResources.ReadAllText("Ryujinx.Graphics.OpenGL/Shaders/fxaa.glsl"), ShaderType.ComputeShader);
 
             _resolutionUniform = GL.GetUniformLocation(_shaderProgram, "invResolution");
             _inputUniform = GL.GetUniformLocation(_shaderProgram, "inputTexture");
