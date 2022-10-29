@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Shader;
 using shaderc;
 using Silk.NET.Vulkan;
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -23,10 +22,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly ShaderStageFlags _stage;
 
         private bool _disposed;
-        private ShaderSpecializationInfo _shaderSpecializationInfo;
         private ShaderModule _module;
-        private NativeArray<SpecializationMapEntry> _mapEntries;
-        private NativeArray<SpecializationInfo> _specializationInfo;
 
         public ShaderStageFlags StageFlags => _stage;
 
@@ -36,7 +32,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public readonly Task CompileTask;
 
-        public unsafe Shader(Vk api, Device device, ShaderSource shaderSource, ShaderSpecializationInfo specializationInfo = null)
+        public unsafe Shader(Vk api, Device device, ShaderSource shaderSource)
         {
             _api = api;
             _device = device;
@@ -45,8 +41,6 @@ namespace Ryujinx.Graphics.Vulkan
             CompileStatus = ProgramLinkStatus.Incomplete;
 
             _stage = shaderSource.Stage.Convert();
-
-            _shaderSpecializationInfo = specializationInfo;
 
             CompileTask = Task.Run(() =>
             {
@@ -147,40 +141,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe PipelineShaderStageCreateInfo GetInfo()
         {
-            if (_shaderSpecializationInfo != null)
-            {
-                var mapEntries = this._shaderSpecializationInfo.Entries.Select(x => new SpecializationMapEntry()
-                {
-                    ConstantID = x.Location,
-                    Offset = x.Offset,
-                    Size = x.Size
-                }).ToArray();
-
-                _mapEntries = new NativeArray<SpecializationMapEntry>(mapEntries.Length);
-
-                for (int i = 0; i < mapEntries.Length; i++)
-                {
-                    _mapEntries[i] = mapEntries[i];
-                }
-
-                _specializationInfo = new NativeArray<SpecializationInfo>(1);
-
-                _specializationInfo[0] = new SpecializationInfo()
-                {
-                    MapEntryCount = (uint)_mapEntries.Length,
-                    PMapEntries = _mapEntries.Pointer,
-                    DataSize = (nuint)_shaderSpecializationInfo.Data.Length,
-                    PData = _shaderSpecializationInfo.Data.Pointer
-                };
-            }
-
             return new PipelineShaderStageCreateInfo()
             {
                 SType = StructureType.PipelineShaderStageCreateInfo,
                 Stage = _stage,
                 Module = _module,
-                PName = (byte*)_ptrMainEntryPointName,
-                PSpecializationInfo = _shaderSpecializationInfo != null ? _specializationInfo.Pointer : null
+                PName = (byte*)_ptrMainEntryPointName
             };
         }
 
@@ -195,9 +161,6 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _api.DestroyShaderModule(_device, _module, null);
                 _disposed = true;
-                _mapEntries?.Dispose();
-                _shaderSpecializationInfo?.Dispose();
-                _specializationInfo?.Dispose();
             }
         }
     }

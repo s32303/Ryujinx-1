@@ -287,9 +287,9 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        internal ShaderCollection CreateProgramWithMinimalLayout(ShaderSource[] sources, ShaderSpecializationInfo[] specializationInfos = null)
+        internal ShaderCollection CreateProgramWithMinimalLayout(ShaderSource[] sources)
         {
-            return new ShaderCollection(this, _device, sources, specializationInfos: specializationInfos, isMinimal: true);
+            return new ShaderCollection(this, _device, sources, isMinimal: true);
         }
 
         public ISampler CreateSampler(GAL.SamplerCreateInfo info)

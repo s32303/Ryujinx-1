@@ -52,21 +52,16 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (texture == null)
             {
-                texture = PhysicalMemory.TextureCache.FindShortCache(descriptor);
+                TextureInfo info = GetInfo(descriptor, out int layerSize);
 
+                ProcessDereferenceQueue();
+
+                texture = PhysicalMemory.TextureCache.FindOrCreateTexture(_channel.MemoryManager, TextureSearchFlags.ForSampler, info, layerSize);
+
+                // If this happens, then the texture address is invalid, we can't add it to the cache.
                 if (texture == null)
                 {
-                    TextureInfo info = GetInfo(descriptor, out int layerSize);
-
-                    ProcessDereferenceQueue();
-
-                    texture = PhysicalMemory.TextureCache.FindOrCreateTexture(_channel.MemoryManager, TextureSearchFlags.ForSampler, info, layerSize);
-
-                    // If this happens, then the texture address is invalid, we can't add it to the cache.
-                    if (texture == null)
-                    {
-                        return ref descriptor;
-                    }
+                    return ref descriptor;
                 }
 
                 texture.IncrementReferenceCount(this, id);
@@ -213,19 +208,13 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (texture != null)
                 {
-                    ref TextureDescriptor cachedDescriptor = ref DescriptorCache[id];
-                    ref readonly TextureDescriptor descriptor = ref GetDescriptorRefAddress(address);
+                    TextureDescriptor descriptor = PhysicalMemory.Read<TextureDescriptor>(address);
 
                     // If the descriptors are the same, the texture is the same,
                     // we don't need to remove as it was not modified. Just continue.
-                    if (descriptor.Equals(ref cachedDescriptor))
+                    if (descriptor.Equals(ref DescriptorCache[id]))
                     {
                         continue;
-                    }
-
-                    if (texture.HasOneReference())
-                    {
-                        _channel.MemoryManager.Physical.TextureCache.AddShortCache(texture, ref cachedDescriptor);
                     }
 
                     texture.DecrementReferenceCount(this, id);

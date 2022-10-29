@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Vulkan
         private Task _compileTask;
         private bool _firstBackgroundUse;
 
-        public ShaderCollection(VulkanRenderer gd, Device device, ShaderSource[] shaders, ShaderSpecializationInfo[] specializationInfos = null, bool isMinimal = false)
+        public ShaderCollection(VulkanRenderer gd, Device device, ShaderSource[] shaders, bool isMinimal = false)
         {
             _gd = gd;
             _device = device;
@@ -69,7 +69,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             for (int i = 0; i < shaders.Length; i++)
             {
-                var shader = new Shader(gd.Api, device, shaders[i], specializationInfos != null ? specializationInfos[i] : null);
+                var shader = new Shader(gd.Api, device, shaders[i]);
 
                 stages |= 1u << shader.StageFlags switch
                 {
